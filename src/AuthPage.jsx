@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Parse from "parse";
+import { signUp, logIn } from "./services/authService.js";
 
 export default function AuthPage({ onAuthenticated }) {
   const [username, setUsername] = useState("");
@@ -10,17 +10,7 @@ export default function AuthPage({ onAuthenticated }) {
     e.preventDefault();
     setError("");
     try {
-      const user = new Parse.User();
-      user.set("username", username);
-      user.set("password", password);
-      await user.signUp();
-
-      // others must be able to find me by username, to share with me
-      const acl = new Parse.ACL(user);
-      acl.setPublicReadAccess(true);
-      user.setACL(acl);
-      await user.save();
-
+      const user = await signUp(username, password);
       onAuthenticated(user);
     } catch (err) {
       setError(err.message);
@@ -31,7 +21,7 @@ export default function AuthPage({ onAuthenticated }) {
     e.preventDefault();
     setError("");
     try {
-      const user = await Parse.User.logIn(username, password);
+      const user = await logIn(username, password);
       onAuthenticated(user);
     } catch (err) {
       setError(err.message);

@@ -1,111 +1,54 @@
 import { useState, useEffect } from "react";
 import AddForm from "./AddForm.jsx";
 import ToDoItem from "./ToDoItem.jsx";
-import Parse from "parse";
-
-const TodoItem = Parse.Object.extend("TodoItem");
-
-// may the current user change this object? asks its ACL
-function canWrite(parseObject) {
-  const acl = parseObject.getACL();
-  if (!acl) return true; // no ACL at all: everybody may write
-
-  const user = Parse.User.current();
-  return acl.getPublicWriteAccess() || acl.getWriteAccess(user);
-}
+import {
+  loadTodos,
+  addTodo,
+  deleteTodo,
+  setDone,
+  canWrite,
+} from "./services/todoService.js";
 
 export default function ToDoList({ list }) {
   let h1Style = { color: "deeppink", backgroundColor: "white" };
 
   let [todos, setTodos] = useState([]);
 
-  async function loadTodos() {
-    // we are creating a query object for objects of type TodoItem
-    const query = new Parse.Query(TodoItem);
-
-    query.equalTo("list", list);
-    query.ascending("createdAt");
-
-    // await
-    const results = await query.find();
-
-    let todosInDB = [];
-
-    for (const item of results) {
-      todosInDB.push({
-        id: item.id,
-        text: item.get("text"),
-        done: item.get("done"),
-        canWrite: canWrite(item),
-      });
-    }
-
-    setTodos(todosInDB);
-  }
-
   useEffect(() => {
-    loadTodos();
-  }, []);
+    loadTodos(list)
+      .then(setTodos)
+      .catch((error) => alert(error.message));
+  }, [list]);
 
-  // newTask is a string
-  function handleAdd(newTaskText) {
-    // creation of a new row in the table
-
-    const newItem = new TodoItem();
-    newItem.set("text", newTaskText);
-    newItem.set("done", false);
-
-    // the to-do follows its list: whoever may read the list may read the to-do
-    newItem.setACL(list.getACL());
-
-    // the to-do belongs to the list this component draws
-    newItem.set("list", list);
-
-    newItem.save().then(onSuccessfulSave).catch(onError);
-
-    function onSuccessfulSave(savedItem) {
-      let newTodos = [
-        ...todos,
-        { id: savedItem.id, text: newTaskText, done: false, canWrite: true },
-      ];
-      setTodos(newTodos);
-    }
-
-    function onError(error) {
+  // newTaskText is a string
+  async function handleAdd(newTaskText) {
+    try {
+      const todo = await addTodo(list, newTaskText);
+      setTodos([...todos, todo]);
+    } catch (error) {
       alert(error.message);
     }
   }
 
-  function handleDelete(idToDelete) {
-    // we only have the id, so we build a stand-in object pointing at that row
-    const item = TodoItem.createWithoutData(idToDelete);
-
-    // destroy() deletes the row on the server; only then drop it from the screen
-    item
-      .destroy()
-      .then(() => {
-        let newTodos = todos.filter((each) => each.id !== idToDelete);
-        setTodos(newTodos);
-      })
-      .catch((error) => alert(error.message));
+  async function handleDelete(idToDelete) {
+    try {
+      // deleted on the server first; only then dropped from the screen
+      await deleteTodo(idToDelete);
+      setTodos(todos.filter((each) => each.id !== idToDelete));
+    } catch (error) {
+      alert(error.message);
+    }
   }
 
-  function handleToggle(id) {
+  async function handleToggle(id) {
     const todo = todos.find((each) => each.id === id);
 
-    const item = TodoItem.createWithoutData(id);
-    item.set("done", !todo.done);
-
-    item
-      .save()
-      .then(() => {
-        let newTodos = todos.map((t) =>
-          t.id === id ? { ...t, done: !t.done } : t,
-        );
-
-        setTodos(newTodos);
-      })
-      .catch((error) => alert(error.message));
+    try {
+      await setDone(id, !todo.done);
+      setTodos(todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+    } catch (error) {
+      alert(error.message);
+    }
   }
 
   useEffect(() => {

@@ -4,29 +4,18 @@ import ListPage from "./ListPage.jsx";
 import { Link, Route, Routes } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-import Parse from "parse";
 import AuthPage from "./AuthPage.jsx";
-
-const List = Parse.Object.extend("List");
-const TodoItem = Parse.Object.extend("TodoItem");
-const ListMember = Parse.Object.extend("ListMember");
-
-// Credentials come from .env.local, which is gitignored.
-// Copy .env.example to .env.local and fill in your own Back4App values.
-if (!import.meta.env.VITE_PARSE_APP_ID) {
-  throw new Error(
-    "No Parse credentials. Copy .env.example to .env.local, fill it in, and restart `npm run dev`.",
-  );
-}
-
-Parse.serverURL = import.meta.env.VITE_PARSE_SERVER_URL;
-Parse.initialize(
-  import.meta.env.VITE_PARSE_APP_ID,
-  import.meta.env.VITE_PARSE_JS_KEY,
-);
+import { currentUser, logOut } from "./services/authService.js";
+import {
+  loadMyLists,
+  loadSharedWithMe,
+  addList,
+  shareList,
+  leaveList,
+} from "./services/listService.js";
 
 function App() {
-  const [user, setUser] = useState(Parse.User.current());
+  const [user, setUser] = useState(currentUser());
   const [lists, setLists] = useState([]);
   const [memberships, setMemberships] = useState([]);
 
@@ -35,41 +24,16 @@ function App() {
     if (!user) return;
 
     async function loadLists() {
-      // we are creating a query object for objects of type List
-      const query = new Parse.Query(List);
-
-      query.equalTo("owner", Parse.User.current());
-
-      // await
-      const results = await query.find();
-
-      setLists(results);
-
-      // the lists shared with me: one ListMember row per list
-      const sharedQuery = new Parse.Query(ListMember);
-      sharedQuery.equalTo("user", Parse.User.current());
-      sharedQuery.include("list"); // bring the list along, not only its id
-      sharedQuery.include("list.owner"); // and, through the list, who owns it
-
-      const rows = await sharedQuery.find();
-
-      // a list its owner has deleted leaves a membership pointing at nothing
-      setMemberships(rows.filter((row) => row.get("list")));
+      setLists(await loadMyLists());
+      setMemberships(await loadSharedWithMe());
     }
 
     loadLists();
   }, [user]); // load again whenever somebody else logs in
 
   async function handleAddList(name) {
-    const currentUser = Parse.User.current();
-
-    const list = new List();
-    list.set("name", name);
-    list.set("owner", currentUser);
-    list.setACL(new Parse.ACL(currentUser)); // only the owner, for now
-
     try {
-      const savedList = await list.save();
+      const savedList = await addList(name);
       setLists([...lists, savedList]);
     } catch (error) {
       alert(error.message);
@@ -78,37 +42,7 @@ function App() {
 
   async function handleShare(list, username) {
     try {
-      const friend = await new Parse.Query(Parse.User)
-        .equalTo("username", username)
-        .first(); // undefined if nobody has that username
-
-      if (!friend) {
-        alert("No user with that name");
-        return;
-      }
-
-      // 1. the security: the friend may read the list, and every to-do in it
-      const acl = list.getACL() ?? new Parse.ACL(Parse.User.current());
-      acl.setReadAccess(friend, true); // may read, not change
-      list.setACL(acl);
-
-      const todos = await new Parse.Query(TodoItem).equalTo("list", list).find();
-      todos.forEach((todo) => todo.setACL(acl));
-
-      // 2. the data: a row that says the friend is on the list
-      const member = new ListMember();
-      member.set("list", list);
-      member.set("user", friend);
-
-      // both of us may change this row: that is how the friend can leave
-      const memberAcl = new Parse.ACL(Parse.User.current());
-      memberAcl.setReadAccess(friend, true);
-      memberAcl.setWriteAccess(friend, true);
-      member.setACL(memberAcl);
-
-      // one request, but not a transaction: if it fails halfway, they disagree
-      await Parse.Object.saveAll([list, ...todos, member]);
-
+      await shareList(list, username);
       alert(`Shared ${list.get("name")} with ${username}`);
     } catch (error) {
       alert(error.message);
@@ -117,8 +51,7 @@ function App() {
 
   async function handleLeave(membership) {
     try {
-      // deletes my row; the ACLs on the list and its to-dos still name me
-      await membership.destroy();
+      await leaveList(membership);
       setMemberships(memberships.filter((each) => each.id !== membership.id));
     } catch (error) {
       alert(error.message);
@@ -127,7 +60,7 @@ function App() {
 
   async function handleLogout() {
     try {
-      await Parse.User.logOut();
+      await logOut();
       setUser(null);
     } catch (error) {
       alert(error);
