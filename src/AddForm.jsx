@@ -12,7 +12,7 @@ export default function AddForm({ onAdd, buttonLabel = "Add New Task" }) {
 
   return (
     <form onSubmit={onButtonClick}>
-      <TextInput input={task} setInput={setTask} />
+      <TextInput value={task} onChange={setTask} />
       <button type="submit" disabled={task.length === 0}>
         {buttonLabel}
       </button>

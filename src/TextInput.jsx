@@ -1,10 +1,11 @@
-import { useState } from "react";
-
-export default function TextInput({ input, setInput }) {
-  function handleInputChange(event) {
-    let newTaskString = event.target.value;
-    setInput(newTaskString);
-  }
-
-  return <input type="text" value={input} onChange={handleInputChange} />;
+// takes what <input> takes, a value and a way to report a change,
+// but reports the new text rather than the DOM event
+export default function TextInput({ value, onChange }) {
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  );
 }

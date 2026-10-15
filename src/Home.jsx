@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
 import AddForm from "./AddForm.jsx";
+import MyListRow from "./MyListRow.jsx";
+import SharedListRow from "./SharedListRow.jsx";
 
 // the home page: every list, by name, each one a link to its own page
 export default function Home({
@@ -13,27 +14,17 @@ export default function Home({
   return (
     <>
       <h2>My lists</h2>
-      {lists.map((item) => (
-        <div key={item.id}>
-          <Link to={`/lists/${item.id}`}>{item.get("name")}</Link>
-          <AddForm
-            onAdd={(username) => onShare(item, username)}
-            buttonLabel="Share with (username)"
-          />
-        </div>
+      {lists.map((list) => (
+        <MyListRow key={list.id} list={list} onShare={onShare} />
       ))}
 
       {memberships.length > 0 && <h2>Shared with me</h2>}
       {memberships.map((membership) => (
-        <p key={membership.id}>
-          <Link to={`/lists/${membership.get("list").id}`}>
-            {membership.get("list").get("name")}
-          </Link>{" "}
-          {/* include() leaves the owner out if I may not read that user's row */}
-          shared by{" "}
-          {membership.get("list").get("owner")?.get("username") ?? "someone"}{" "}
-          <button onClick={() => onLeave(membership)}>Leave</button>
-        </p>
+        <SharedListRow
+          key={membership.id}
+          membership={membership}
+          onLeave={onLeave}
+        />
       ))}
 
       <br />
