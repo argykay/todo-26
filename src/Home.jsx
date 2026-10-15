@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import NewTodoForm from "./NewTodoForm.jsx";
+import AddForm from "./AddForm.jsx";
 
 // the home page: every list, by name, each one a link to its own page
 export default function Home({
@@ -16,7 +16,7 @@ export default function Home({
       {lists.map((item) => (
         <div key={item.id}>
           <Link to={`/lists/${item.id}`}>{item.get("name")}</Link>
-          <NewTodoForm
+          <AddForm
             onAdd={(username) => onShare(item, username)}
             buttonLabel="Share with (username)"
           />
@@ -39,7 +39,7 @@ export default function Home({
       <br />
       <br />
       <h3>List Manager</h3>
-      <NewTodoForm onAdd={onAddList} buttonLabel="New list" />
+      <AddForm onAdd={onAddList} buttonLabel="New list" />
       <h3>Account</h3>
       <button onClick={onLogout}>Logout</button>
     </>

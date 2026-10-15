@@ -1,7 +1,7 @@
 import { useState } from "react";
 import TextInput from "./TextInput.jsx";
 
-export default function NewTodoForm({ onAdd, buttonLabel = "Add New Task" }) {
+export default function AddForm({ onAdd, buttonLabel = "Add New Task" }) {
   let [task, setTask] = useState("");
 
   function onButtonClick(event) {

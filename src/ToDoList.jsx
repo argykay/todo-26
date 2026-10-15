@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import NewTodoForm from "./NewTodoForm.jsx";
+import AddForm from "./AddForm.jsx";
 import ToDoItem from "./ToDoItem.jsx";
 import Parse from "parse";
 
@@ -130,7 +130,7 @@ export default function ToDoList({ list }) {
         </ul>
       )}
 
-      {canWrite(list) && <NewTodoForm onAdd={handleAdd} />}
+      {canWrite(list) && <AddForm onAdd={handleAdd} />}
     </>
   );
 }
