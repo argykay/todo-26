@@ -1,10 +1,11 @@
-import "./App.css";
-import Home from "./Home.jsx";
-import ListPage from "./ListPage.jsx";
+import Home from "./pages/Home.jsx";
+import ListPage from "./pages/ListPage.jsx";
 import { Link, Route, Routes } from "react-router-dom";
+import styled, { createGlobalStyle } from "styled-components";
+import colors from "./colors.js";
 import { useEffect, useState } from "react";
 
-import AuthPage from "./AuthPage.jsx";
+import AuthPage from "./pages/AuthPage.jsx";
 import { currentUser, logOut } from "./services/authService.js";
 import {
   loadMyLists,
@@ -12,6 +13,7 @@ import {
   addList,
   shareList,
   leaveList,
+  deleteList,
 } from "./services/listService.js";
 
 function App() {
@@ -49,6 +51,15 @@ function App() {
     }
   }
 
+  async function handleDeleteList(list) {
+    try {
+      await deleteList(list);
+      setLists(lists.filter((each) => each.id !== list.id));
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
   async function handleLeave(membership) {
     try {
       await leaveList(membership);
@@ -72,28 +83,84 @@ function App() {
   }
 
   if (!user) {
-    return <AuthPage onAuthenticated={handleAuthenticated} />;
+    return (
+      <>
+        <GlobalStyle />
+        <Page>
+          <AuthPage onAuthenticated={handleAuthenticated} />
+        </Page>
+      </>
+    );
   }
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <Home
-            lists={lists}
-            memberships={memberships}
-            onAddList={handleAddList}
-            onShare={handleShare}
-            onLeave={handleLeave}
-            onLogout={handleLogout}
+    <>
+      <GlobalStyle />
+      <Page>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Home
+                lists={lists}
+                memberships={memberships}
+                onAddList={handleAddList}
+                onShare={handleShare}
+                onLeave={handleLeave}
+                onDeleteList={handleDeleteList}
+                onLogout={handleLogout}
+              />
+            }
           />
-        }
-      />
-      <Route path="/lists/:listId" element={<ListPage />} />
-      <Route path="*" element={<Link to="/">No such page</Link>} />
-    </Routes>
+          <Route path="/lists/:listId" element={<ListPage />} />
+          <Route path="*" element={<MissingLink to="/">No such page</MissingLink>} />
+        </Routes>
+      </Page>
+    </>
   );
 }
 
 export default App;
+
+const GlobalStyle = createGlobalStyle`
+  body {
+    margin: 0;
+    min-height: 100svh;
+    font-family: "Nunito", sans-serif;
+    background: ${colors.background};
+    color: ${colors.ink};
+  }
+
+  #root {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  button,
+  input {
+    font-family: inherit;
+  }
+`;
+
+const Page = styled.main`
+  box-sizing: border-box;
+  width: 92%;
+  max-width: 520px;
+  margin: 24px auto;
+  padding: 28px;
+  background: ${colors.white};
+  border: 1px solid ${colors.line};
+  border-radius: 16px;
+`;
+
+const MissingLink = styled(Link)`
+  color: ${colors.accent};
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
