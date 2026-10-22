@@ -2,7 +2,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import colors from "../colors.js";
 import { signUp, logIn } from "../services/authService.js";
-import Button from "../components/Button.jsx";
+import Button from "../components/UI/Button.jsx";
 
 export default function AuthPage({ onAuthenticated }) {
   const [username, setUsername] = useState("");

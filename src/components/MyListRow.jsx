@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import colors from "../colors.js";
-import AddForm from "./AddForm.jsx";
-import Button, { CloseIcon } from "./Button.jsx";
+import AddForm from "./UI/AddForm.jsx";
+import Button, { CloseIcon } from "./UI/Button.jsx";
 
 // one of my own lists: its name, and a form to share it
 export default function MyListRow({ list, onShare, onDelete }) {

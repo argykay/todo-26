@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import colors from "../colors.js";
-import Button from "./Button.jsx";
+import Button from "./UI/Button.jsx";
 
 // a list somebody shared with me: its name, its owner, and a way out
 export default function SharedListRow({ membership, onLeave }) {

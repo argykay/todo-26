@@ -1,5 +1,5 @@
-import Button from "../components/Button.jsx";
-import AddForm from "../components/AddForm.jsx";
+import Button from "../components/UI/Button.jsx";
+import AddForm from "../components/UI/AddForm.jsx";
 import MyListRow from "../components/MyListRow.jsx";
 import SharedListRow from "../components/SharedListRow.jsx";
 import styled from "styled-components";

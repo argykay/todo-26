@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import colors from "../colors.js";
+import colors from "../../colors.js";
 
 export function CloseIcon() {
   return (
@@ -19,8 +19,8 @@ export function CloseIcon() {
 export default function Button({ label, icon, ...props }) {
   return (
     <ActionButton {...props}>
-      {icon}
       {label}
+      {icon}
     </ActionButton>
   );
 }

@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import colors from "../colors.js";
+import colors from "../../colors.js";
 
 // takes what <input> takes, a value and a way to report a change,
 // but reports the new text rather than the DOM event

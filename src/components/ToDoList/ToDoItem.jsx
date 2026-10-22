@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import colors from "../../colors.js";
-import Button, { CloseIcon } from "../Button.jsx";
+import Button, { CloseIcon } from "../UI/Button.jsx";
 
 export default function ToDoItem({ elem, onDelete, onChange }) {
   return (
